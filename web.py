@@ -10,6 +10,7 @@ def index():
     link += "<a href=/me>關於我</a><hr>"
     link += "<a href=/welcome?u=元汝&d=靜宜資管&c=資訊管理導論>Get傳直</a><hr>"
     link += "<a href=/account>POST傳直</a><hr>"
+    link += "<a href=/a>次方與根號計算</a><hr>"
     return link
 
 @app.route("/mis")
@@ -41,6 +42,10 @@ def account():
         return result
     else:
         return render_template("account.html")
+
+@app.route("/a")
+def a():
+    return render_template("01.html")
 
 if __name__ == "__main__":
    app.run(debug=True)
