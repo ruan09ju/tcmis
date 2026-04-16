@@ -49,20 +49,37 @@ def spider():
         R += str(i.text) + i.get("href") + "<br>"
     return R
 
-@app.route("/read2")
+@app.route("/read2", methods=["GET", "POST"])
 def read2():
-    Result = ""
-    keyword = "楊"
-    db = firestore.client()
-    collection_ref = db.collection("靜宜資管2026B")    
-    docs = collection_ref.get()   
-    for doc in docs: 
-        teacher = doc.to_dict()
-        if keyword in teacher["name"] :      
-            Result += str(teacher) + "<br>" 
+    # 網頁標題與查詢表單
+    Result = "<h1>靜宜資管老師查詢</h1>"
+    Result += '<form action="/read2" method="post">'
+    Result += '請輸入老師姓名關鍵字：<input type="text" name="keyword">'
+    Result += '<button type="submit">查詢</button></form><br>'
 
-    if Result == "":
-        Result = "抱歉，查無此關鍵字姓名之老師資料"   
+    if request.method == "POST":
+        keyword = request.form.get("keyword") # 取得使用者輸入的字，例如「楊」
+        Result += f"<h3>查詢結果 (關鍵字: {keyword}):</h3>"
+       
+        db = firestore.client()
+        collection_ref = db.collection("靜宜資管2026B")
+        docs = collection_ref.get()
+       
+        found = False
+        for doc in docs:
+            teacher_data = doc.to_dict()
+            name = teacher_data.get('name')
+           
+            # --- 關鍵修正：判斷關鍵字是否有在姓名裡面 ---
+            if name and keyword in name:
+                found = True
+                lab = teacher_data.get('lab', '未知')
+                Result += f"<span style='color:blue; font-weight:bold'>{name}</span> 老師的研究室是在 <b>{lab}</b><br>"
+       
+        if not found:
+            Result += f"抱歉，查無老師此資料。<br>"
+
+    Result += "<br><a href=/>返回首頁</a>"
     return Result
 
 @app.route("/read")
