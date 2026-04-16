@@ -5,6 +5,8 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
+import requests
+from bs4 import BeautifulSoup
 
 # 判斷是在 Vercel 還是本地
 if os.path.exists('serviceAccountKey.json'):
@@ -30,9 +32,38 @@ def index():
     link += "<a href=/account>POST傳直</a><hr>"
     link += "<a href=/a>次方與根號計算</a><hr>"
     link += "<a href=/read>讀取Firestore資料</a><hr>"
+    link += "<a href=/read2>讀取Firestore資料(根據名字關鍵字:楊)</a><hr>"
+    link += "<a href=/sprider>爬取子青老師本學期課程</a><hr>"
     return link
 
+@app.route("/sprider")
+def spider():
+    R = ""
+    url = "https://www1.pu.edu.tw/~tcyang/course.html"
+    Data = requests.get(url)
+    Data.encoding = "utf-8"
+    sp = BeautifulSoup(Data.text, "html.parser")
+    result=sp.select(".team-box a")
 
+    for i in result:
+        R += str(i.text) + i.get("href") + "<br>"
+    return R
+
+@app.route("/read2")
+def read2():
+    Result = ""
+    keyword = "楊"
+    db = firestore.client()
+    collection_ref = db.collection("靜宜資管2026B")    
+    docs = collection_ref.get()   
+    for doc in docs: 
+        teacher = doc.to_dict()
+        if keyword in teacher["name"] :      
+            Result += str(teacher) + "<br>" 
+
+    if Result == "":
+        Result = "抱歉，查無此關鍵字姓名之老師資料"   
+    return Result
 
 @app.route("/read")
 def read():
